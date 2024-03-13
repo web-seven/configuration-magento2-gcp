@@ -2,7 +2,7 @@
 Crossplane Configuration for deploy and manage Magento 2 Architecture on Google Cloud Platform.
 # Architecture
 Configuration is based on generic recommended setup for Adobe Commerce and Magento Open Source instances.
-According to (official documentation)[https://experienceleague.adobe.com/docs/commerce-operations/performance-best-practices/reference-architecture.html?lang=en]
+According to [official documentation](https://experienceleague.adobe.com/docs/commerce-operations/performance-best-practices/reference-architecture.html?lang=en)
 The Commerce Reference Architecture diagram represents the best practice approach to set up a scalable Commerce site.
 
 The color of each element in the diagram indicates whether the element is part of Magento Open Source or Adobe Commerce and if it is required.
