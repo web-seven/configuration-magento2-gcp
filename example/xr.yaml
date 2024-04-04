@@ -1,0 +1,19 @@
+apiVersion: magentogke.webseven.io/v1alpha1
+kind: MagentoGKE
+metadata:
+  name: magento
+spec:
+  projectId: ""
+  location:
+    region: europe-west9
+    zone: europe-west9-c
+  nodeCount: 1
+  nodeType: e2-standard-4
+  database:
+    password: ""
+  magento: 
+    hostname: ""
+  gcp:
+    secret:
+      name: gcp-secret
+      namespace: default

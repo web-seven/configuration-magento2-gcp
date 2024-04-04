@@ -1,0 +1,164 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: magentogkes.magentogke.webseven.io
+spec:
+  group: magentogke.webseven.io
+  names:
+    kind: MagentoGKE
+    plural: magentogkes
+    singular: magentogke
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                projectId:
+                  type: string
+                location:
+                  type: object
+                  properties:
+                    zone:
+                      type: string
+                    region:
+                      type: string
+                nodeCount:
+                  type: integer
+                nodeType:
+                  type: string
+                gcp:
+                  type: object
+                  properties:
+                    secret:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                database:
+                  type: object
+                  properties:
+                    password:
+                      type: string
+                magento:
+                  type: object
+                  properties:
+                    hostname:
+                      type: string
+
+            status:
+              type: object
+              properties:
+                ingress:
+                  type: object
+                  properties:
+                    ip:
+                      type: string
+                    id:
+                      type: string
+                egress:
+                  type: object
+                  properties:
+                    ip:
+                      type: string
+                    id:
+                      type: string
+                router:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                cluster:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    creds:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                network:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    id:
+                      type: string
+                    ingress:
+                      type: object
+                      properties:
+                        ip:
+                          type: string
+                subnetwork:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                providers:
+                  type: object
+                  properties:
+                    helm:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                    kubernetes:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                chartRegistry:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                secretsManager:
+                  type: object
+                  properties:
+                    secretStoreName:
+                      type: string
+                deployments:
+                  type: object
+                  properties:
+                    argoCdProject:
+                      type: string
+                sqlInstance:
+                  type: object
+                  properties:
+                    database:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                    name:
+                      type: string
+                    host:
+                      type: string
+                    user:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        password:
+                          type: string
+                ipRange:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+
+
+      served: true
+      referenceable: true
