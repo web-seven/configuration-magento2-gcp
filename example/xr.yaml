@@ -1,9 +1,9 @@
-apiVersion: gcp.web7.io/v1alpha1
-kind: MagentoGCP
+apiVersion: gcp.web7.md/v1alpha1
+kind: Magento2GCP
 metadata:
   name: magento
 spec:
-  projectId: "feelandcode-6fba4"
+  projectId: ""
   location:
     region: europe-west9
     zone: europe-west9-c
@@ -11,12 +11,11 @@ spec:
   nodeType: n2-standard-2
   database:
     password: "admin123"
-  databaseInstance:
     version: "MYSQL_5_7"
     diskSize: 10
     tier: "db-f1-micro"
   magento: 
-    hostname: "feelandcode.online"
+    hostname: ""
     chart:
       name: "magento"
       version: "25.5.0"

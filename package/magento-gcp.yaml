@@ -4,8 +4,8 @@ metadata:
   name: magento2-gcp
 spec:
   compositeTypeRef:
-    apiVersion: gcp.web7.io/v1alpha1
-    kind: MagentoGCP
+    apiVersion: gcp.web7.md/v1alpha1
+    kind: Magento2GCP
   resources:
 
 
@@ -677,7 +677,7 @@ spec:
         fromFieldPath: status.sqlInstance.database.name
         toFieldPath: spec.forProvider.values.externalDatabase.database
       - type: FromCompositeFieldPath
-        fromFieldPath: status.sqlInstance.host
+        fromFieldPath: status.sqlInstance.privateIpAddress
         toFieldPath: spec.forProvider.values.externalDatabase.host
       - type: FromCompositeFieldPath
         fromFieldPath: spec.magento.hostname
@@ -711,20 +711,20 @@ spec:
         fromFieldPath: "spec.location.region"
         toFieldPath: "spec.forProvider.region"
       - type: FromCompositeFieldPath
-        fromFieldPath: "spec.databaseInstance.version"
+        fromFieldPath: "spec.database.version"
         toFieldPath: "spec.forProvider.databaseVersion"
       - type: FromCompositeFieldPath
-        fromFieldPath: "spec.databaseInstance.diskSize"
+        fromFieldPath: "spec.database.diskSize"
         toFieldPath: "spec.forProvider.settings[0].diskSize"
       - type: FromCompositeFieldPath
-        fromFieldPath: "spec.databaseInstance.tier"
+        fromFieldPath: "spec.database.tier"
         toFieldPath: "spec.forProvider.settings[0].tier"
       - type: FromCompositeFieldPath
         fromFieldPath: "status.network.name"
         toFieldPath: "spec.forProvider.settings[0].ipConfiguration[0].privateNetworkRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.privateIpAddress"
-        toFieldPath: "status.sqlInstance.host"
+        toFieldPath: "status.sqlInstance.privateIpAddress"
 
 
     - name: db-user-mysql

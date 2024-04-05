@@ -45,5 +45,5 @@ jobs:
       run: curl -sL "https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh" | sh
 
     - name: Build and push crossplane packages
-      run: ./crossplane xpkg build -f package/configuration-magento2-gcp -o configuration-magento2-gcp  && ./crossplane xpkg push -f configuration-magento2-gcp ${REGISTRY}/${{ github.repository }}/configuration-magento2-gcp:${{ env.VERSION }} || true' || true;
+      run: ./crossplane xpkg build -f package -o configuration-magento2-gcp  && ./crossplane xpkg push -f configuration-magento2-gcp ${REGISTRY}/${{ github.repository }}/configuration-magento2-gcp:${{ env.VERSION }} || true' || true;
 
