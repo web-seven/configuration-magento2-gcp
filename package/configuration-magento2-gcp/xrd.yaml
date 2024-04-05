@@ -1,13 +1,13 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: magentogkes.magentogke.webseven.io
+  name: magentogcps.gcp.web7.io
 spec:
-  group: magentogke.webseven.io
+  group: gcp.web7.io
   names:
-    kind: MagentoGKE
-    plural: magentogkes
-    singular: magentogke
+    kind: MagentoGCP
+    plural: magentogcps
+    singular: magentogcp
   versions:
     - name: v1alpha1
       schema:
@@ -30,7 +30,44 @@ spec:
                   type: integer
                 nodeType:
                   type: string
-                gcp:
+                database:
+                  type: object
+                  properties:
+                    password:
+                      type: string
+                databaseInstance:
+                  type: object
+                  properties:
+                    version:
+                      type: string
+                    diskSize:
+                      type: integer
+                    tier:
+                      type: string
+                magento:
+                  type: object
+                  properties:
+                    creds:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        password:
+                          type: string
+                        email:
+                          type: string
+                    hostname:
+                      type: string
+                    chart:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        version:
+                          type: string
+                        repository:
+                          type: string
+                providerConfigSecretRef:
                   type: object
                   properties:
                     secret:
@@ -38,19 +75,8 @@ spec:
                       properties:
                         name:
                           type: string
-                        namespace:
+                        namespace: 
                           type: string
-                database:
-                  type: object
-                  properties:
-                    password:
-                      type: string
-                magento:
-                  type: object
-                  properties:
-                    hostname:
-                      type: string
-
             status:
               type: object
               properties:
@@ -119,6 +145,11 @@ spec:
                       properties:
                         name:
                           type: string
+                    gcp:
+                      type: object
+                      properties:
+                        name:
+                          type: string
                 chartRegistry:
                   type: object
                   properties:
@@ -158,7 +189,6 @@ spec:
                   properties:
                     name:
                       type: string
-
 
       served: true
       referenceable: true

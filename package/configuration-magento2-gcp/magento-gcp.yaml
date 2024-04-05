@@ -1,8 +1,11 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: magento2-gke
+  name: magento2-gcp
 spec:
+  compositeTypeRef:
+    apiVersion: gcp.web7.io/v1alpha1
+    kind: MagentoGCP
   resources:
 
 
@@ -36,7 +39,7 @@ spec:
                 namespace: default
               type: Opaque
               stringData:
-                mariadb-password: ""
+                password: ""
           providerConfigRef:
             name: ""
       patches:
@@ -49,7 +52,7 @@ spec:
         toFieldPath: "metadata.name"
       - type: FromCompositeFieldPath
         fromFieldPath: "spec.database.password"
-        toFieldPath: "spec.forProvider.manifest.stringData.mariadb-password"
+        toFieldPath: "spec.forProvider.manifest.stringData.password"
       - type: FromCompositeFieldPath
         fromFieldPath: "metadata.uid"
         transforms:
@@ -57,6 +60,36 @@ spec:
             string:
               fmt: "magento-%s"
         toFieldPath: "spec.providerConfigRef.name"
+
+
+    - name: provider-config-gcp
+      base:
+        apiVersion: gcp.upbound.io/v1beta1
+        kind: ProviderConfig
+        spec:
+          credentials:
+            secretRef:
+              key: creds
+              name: ""
+              namespace: default
+            source: Secret
+          projectID: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.providerConfigSecretRef.secret.name"
+        toFieldPath: "spec.credentials.secretRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.providerConfigSecretRef.secret.namespace"
+        toFieldPath: "spec.credentials.secretRef.namespace"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.projectID"
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: "metadata.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.name"
+        toFieldPath: "status.providers.gcp.name"
 
 
     - name: ingress-ip
@@ -68,7 +101,7 @@ spec:
             project: ""
             region: ""
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -83,6 +116,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: "spec.location.region"
         toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.address"
         toFieldPath: "status.ingress.ip"
@@ -103,7 +139,7 @@ spec:
             addressType: INTERNAL
             prefixLength: 16
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -114,6 +150,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: "status.network.name"
         toFieldPath: "spec.forProvider.networkRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
         toFieldPath: "status.ipRange.name"
@@ -151,7 +190,7 @@ spec:
             project: ""
             region: ""
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -166,6 +205,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: "spec.location.region"
         toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.id"
         toFieldPath: "status.egress.id"
@@ -184,7 +226,7 @@ spec:
             mtu: 1460
             project: ""
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -192,6 +234,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: "spec.projectId"
         toFieldPath: "spec.forProvider.project"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.id"
         toFieldPath: "status.network.id"
@@ -211,7 +256,7 @@ spec:
             network: ""
             ipCidrRange: 192.168.1.0/24
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -225,6 +270,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: "status.network.id"
         toFieldPath: "spec.forProvider.network"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.id"
         toFieldPath: "status.subnetwork.id"
@@ -250,7 +298,7 @@ spec:
             sourceRanges:
               - 0.0.0.0/0
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -258,6 +306,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: "status.network.id"
         toFieldPath: "spec.forProvider.network"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
 
 
     - name: router
@@ -270,7 +321,7 @@ spec:
             region: ""
             network: ""
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -284,6 +335,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: "status.network.id"
         toFieldPath: "spec.forProvider.network"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.id"
         toFieldPath: "status.router.id"
@@ -305,7 +359,7 @@ spec:
             sourceSubnetworkIpRangesToNat: ALL_SUBNETWORKS_ALL_IP_RANGES
             natIpAllocateOption: MANUAL_ONLY
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -322,6 +376,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: "status.egress.id"
         toFieldPath: "spec.forProvider.natIps[0]"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
 
 
     - name: cluster
@@ -412,7 +469,7 @@ spec:
               - maxNodeCount: 1
                 minNodeCount: 1
           providerConfigRef:
-            name: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: spec.projectId
@@ -429,6 +486,9 @@ spec:
       - type: FromCompositeFieldPath
         fromFieldPath: spec.nodeType
         toFieldPath: spec.forProvider.nodeConfig[0].machineType
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
       
 
     - name: kubernetes-provider
@@ -445,7 +505,7 @@ spec:
           identity:
             secretRef:
               key: creds
-              name: gcp-secret
+              name: ""
               namespace: default
             source: Secret
             type: GoogleApplicationCredentials
@@ -460,10 +520,10 @@ spec:
         fromFieldPath: "status.cluster.creds.namespace"
         toFieldPath: "spec.credentials.secretRef.namespace"
       - type: FromCompositeFieldPath
-        fromFieldPath: "spec.gcp.secret.name"
+        fromFieldPath: "spec.providerConfigSecretRef.secret.name"
         toFieldPath: "spec.identity.secretRef.name"
       - type: FromCompositeFieldPath
-        fromFieldPath: "spec.gcp.secret.namespace"
+        fromFieldPath: "spec.providerConfigSecretRef.secret.namespace"
         toFieldPath: "spec.identity.secretRef.namespace"
       - type: ToCompositeFieldPath
         fromFieldPath: "metadata.name"
@@ -484,7 +544,7 @@ spec:
           identity:
             secretRef:
               key: creds
-              name: gcp-secret
+              name: ""
               namespace: default
             source: Secret
             type: GoogleApplicationCredentials
@@ -499,10 +559,10 @@ spec:
         fromFieldPath: "status.cluster.creds.namespace"
         toFieldPath: "spec.credentials.secretRef.namespace"
       - type: FromCompositeFieldPath
-        fromFieldPath: "spec.gcp.secret.name"
+        fromFieldPath: "spec.providerConfigSecretRef.secret.name"
         toFieldPath: "spec.identity.secretRef.name"
       - type: FromCompositeFieldPath
-        fromFieldPath: "spec.gcp.secret.namespace"
+        fromFieldPath: "spec.providerConfigSecretRef.secret.namespace"
         toFieldPath: "spec.identity.secretRef.namespace"
       - type: ToCompositeFieldPath
         fromFieldPath: "metadata.name"
@@ -565,15 +625,17 @@ spec:
         spec:
           forProvider:
             chart:
-              name: magento
-              repository: oci://registry-1.docker.io/bitnamicharts
-              version: "25.5.0"
+              name: "magento"
+              repository: "oci://registry-1.docker.io/bitnamicharts"
+              version: ""
             namespace: default
             values:
               persistence: 
                 enabled: false
               magentoHost: ""
               magentoPassword: ""
+              magentoUsername: ""
+              magentoEmail: ""
               externalDatabase:
                 host: ""
                 port: 3306
@@ -588,6 +650,8 @@ spec:
                 ingressClassName: nginx
                 enabled: true
                 hostname: ""
+                annotations:
+                  nginx.ingress.kubernetes.io/rewrite-target: /
           providerConfigRef:
             name: ""
       patches:
@@ -595,14 +659,17 @@ spec:
         fromFieldPath: status.providers.helm.name
         toFieldPath: spec.providerConfigRef.name
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.helm.name
-        toFieldPath: spec.providerConfigRef.name
-      - type: FromCompositeFieldPath
         fromFieldPath: spec.database.password
         toFieldPath: spec.forProvider.values.externalDatabase.password
       - type: FromCompositeFieldPath
-        fromFieldPath: spec.database.password
+        fromFieldPath: spec.magento.creds.password
         toFieldPath: spec.forProvider.values.magentoPassword
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.magento.creds.username
+        toFieldPath: spec.forProvider.values.magentoUsername
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.magento.creds.email
+        toFieldPath: spec.forProvider.values.magentoEmail
       - type: FromCompositeFieldPath
         fromFieldPath: status.sqlInstance.user.name
         toFieldPath: spec.forProvider.values.externalDatabase.user
@@ -635,17 +702,23 @@ spec:
                   name: ""
             settings:
               - diskSize: 20
-                tier: db-f1-micro
+                tier: ""
       patches:
       - type: ToCompositeFieldPath
         fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
         toFieldPath: "status.sqlInstance.name"
       - type: FromCompositeFieldPath
-        fromFieldPath: "status.sqlInstance.name"
-        toFieldPath: "metadata.labels[crossplane.io/external-name]"
-      - type: FromCompositeFieldPath
         fromFieldPath: "spec.location.region"
         toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.databaseInstance.version"
+        toFieldPath: "spec.forProvider.databaseVersion"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.databaseInstance.diskSize"
+        toFieldPath: "spec.forProvider.settings[0].diskSize"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.databaseInstance.tier"
+        toFieldPath: "spec.forProvider.settings[0].tier"
       - type: FromCompositeFieldPath
         fromFieldPath: "status.network.name"
         toFieldPath: "spec.forProvider.settings[0].ipConfiguration[0].privateNetworkRef.name"
@@ -660,17 +733,16 @@ spec:
         kind: User
         spec:
           forProvider:
-            instanceSelector:
-              matchLabels: 
-                crossplane.io/external-name: ""
+            instanceRef:
+              name: ""
             passwordSecretRef:
-              key: mariadb-password
+              key: password
               name: ""
               namespace: default
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: "status.sqlInstance.name"
-        toFieldPath: "spec.forProvider.instanceSelector.matchLabels[crossplane.io/external-name]"
+        toFieldPath: "spec.forProvider.instanceRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
         toFieldPath: "status.sqlInstance.user.name"
@@ -689,18 +761,14 @@ spec:
         kind: Database
         spec:
           forProvider:
-            instanceSelector:
-              matchLabels: 
-                crossplane.io/external-name: ""
+            instanceRef:
+              name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: "status.sqlInstance.name"
-        toFieldPath: "spec.forProvider.instanceSelector.matchLabels[crossplane.io/external-name]"
+        toFieldPath: "spec.forProvider.instanceRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
         toFieldPath: "status.sqlInstance.database.name"
 
 
-  compositeTypeRef:
-    apiVersion: magentogke.webseven.io/v1alpha1
-    kind: MagentoGKE

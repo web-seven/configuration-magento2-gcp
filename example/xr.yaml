@@ -1,19 +1,32 @@
-apiVersion: magentogke.webseven.io/v1alpha1
-kind: MagentoGKE
+apiVersion: gcp.web7.io/v1alpha1
+kind: MagentoGCP
 metadata:
   name: magento
 spec:
-  projectId: ""
+  projectId: "feelandcode-6fba4"
   location:
     region: europe-west9
     zone: europe-west9-c
   nodeCount: 1
-  nodeType: e2-standard-4
+  nodeType: n2-standard-2
   database:
-    password: ""
+    password: "admin123"
+  databaseInstance:
+    version: "MYSQL_5_7"
+    diskSize: 10
+    tier: "db-f1-micro"
   magento: 
-    hostname: ""
-  gcp:
+    hostname: "feelandcode.online"
+    chart:
+      name: "magento"
+      version: "25.5.0"
+      repository: oci://registry-1.docker.io/bitnamicharts
+    creds:
+      username: "admin"
+      password: "admin123"
+      email: admin@gmail.com
+
+  providerConfigSecretRef:
     secret:
       name: gcp-secret
       namespace: default
