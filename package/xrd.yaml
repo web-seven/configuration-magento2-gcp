@@ -1,0 +1,234 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: magento2gcps.gcp.web7.md
+spec:
+  group: gcp.web7.md
+  names:
+    kind: Magento2GCP
+    plural: magento2gcps
+    singular: magento2gcp
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                projectId:
+                  type: string
+                  description: ID of the Google Cloud Platform project.
+                location:
+                  type: object
+                  description: Location information for GCP resources.
+                  properties:
+                    zone:
+                      type: string
+                      description: Google Cloud zone.
+                    region:
+                      type: string
+                      description: Google Cloud region.
+                nodeCount:
+                  type: integer
+                  description: Number of nodes.
+                nodeType:
+                  type: string
+                  description: Type of nodes.
+                database:
+                  type: object
+                  description: Database configuration.
+                  properties:
+                    password:
+                      type: string
+                      description: Password for the database.
+                    version:
+                      type: string
+                      description: Version of the database.
+                    diskSize:
+                      type: integer
+                      description: Size of the database disk.
+                    tier:
+                      type: string
+                      description: Tier of the database.
+                magento:
+                  type: object
+                  description: Magento configuration.
+                  properties:
+                    creds:
+                      type: object
+                      description: Credentials for Magento.
+                      properties:
+                        username:
+                          type: string
+                          description: Magento username.
+                        password:
+                          type: string
+                          description: Magento password.
+                        email:
+                          type: string
+                          description: Email associated with Magento.
+                    hostname:
+                      type: string
+                      description: Hostname for Magento.
+                    chart:
+                      type: object
+                      description: Chart configuration for Magento.
+                      properties:
+                        name:
+                          type: string
+                          description: Name of the chart.
+                        version:
+                          type: string
+                          description: Version of the chart.
+                        repository:
+                          type: string
+                          description: Repository for the chart.
+                providerConfigSecretRef:
+                  type: object
+                  description: Reference to provider configuration secret.
+                  properties:
+                    secret:
+                      type: object
+                      description: Reference to secret with GCP credentials.
+                      properties:
+                        name:
+                          type: string
+                          description: Name of the secret.
+                        namespace: 
+                          type: string
+                          description: Namespace of the secret.
+            status:
+              type: object
+              description: Status information.
+              properties:
+                ingress:
+                  type: object
+                  description: Ingress details.
+                  properties:
+                    ip:
+                      type: string
+                      description: Ingress IP.
+                    id:
+                      type: string
+                      description: Ingress ID.
+                egress:
+                  type: object
+                  description: Egress details.
+                  properties:
+                    ip:
+                      type: string
+                      description: Egress IP.
+                    id:
+                      type: string
+                      description: Egress ID.
+                router:
+                  type: object
+                  description: Router details.
+                  properties:
+                    id:
+                      type: string
+                      description: Router ID.
+                    name:
+                      type: string
+                      description: Router name.
+                cluster:
+                  type: object
+                  description: Cluster details.
+                  properties:
+                    name:
+                      type: string
+                      description: Cluster name.
+                    creds:
+                      type: object
+                      description: Credentials for the cluster.
+                      properties:
+                        name:
+                          type: string
+                          description: Name of the Secret with cluster connection credentials.
+                        namespace:
+                          type: string
+                          description: Namespace of the Secret with cluster connection credentials.
+                network:
+                  type: object
+                  description: Network details.
+                  properties:
+                    name:
+                      type: string
+                      description: Network name.
+                    id:
+                      type: string
+                      description: Network ID.
+                subnetwork:
+                  type: object
+                  description: Subnetwork details.
+                  properties:
+                    id:
+                      type: string
+                      description: Subnetwork ID.
+                    name:
+                      type: string
+                      description: Subnetwork name.
+                providers:
+                  type: object
+                  description: Providers details.
+                  properties:
+                    helm:
+                      type: object
+                      description: Helm provider details.
+                      properties:
+                        name:
+                          type: string
+                          description: Name of the Helm provider.
+                    kubernetes:
+                      type: object
+                      description: Kubernetes provider details.
+                      properties:
+                        name:
+                          type: string
+                          description: Name of the Kubernetes provider.
+                    gcp:
+                      type: object
+                      description: Google Cloud Platform provider details.
+                      properties:
+                        name:
+                          type: string
+                          description: Name of the GCP provider.
+                sqlInstance:
+                  type: object
+                  description: SQL Instance details.
+                  properties:
+                    database:
+                      type: object
+                      description: Database details.
+                      properties:
+                        name:
+                          type: string
+                          description: Name of the database.
+                    name:
+                      type: string
+                      description: Instance name.
+                    privateIpAddress:
+                      type: string
+                      description: Private ip address for the instance.
+                    user:
+                      type: object
+                      description: User details for the instance.
+                      properties:
+                        name:
+                          type: string
+                          description: Username for the database.
+                        password:
+                          type: string
+                          description: Password for the database.
+                ipRange:
+                  type: object
+                  description: IP Range details.
+                  properties:
+                    name:
+                      type: string
+                      description: Name of the IP Range.
+
+      served: true
+      referenceable: true

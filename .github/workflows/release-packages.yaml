@@ -1,0 +1,49 @@
+name: Configuration package release
+on:
+  push:
+    branches:
+    - main
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+
+  build-and-pack:
+    name: Build and pack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: CR authentication
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.ACCESS_TOKEN }}
+
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+    - name: Configure Git
+      run: |
+        git config user.name "$GITHUB_ACTOR"
+        git config user.email "$GITHUB_ACTOR@github.com"
+
+    - name: Set VERSION env
+      run: echo VERSION=$(echo ${GITHUB_REF} | rev | cut -d'/' -f 1 | rev ) >> ${GITHUB_ENV}
+
+    - name: Install crossplane CLI
+      id: crossplane
+      run: curl -sL "https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh" | sh
+
+    - name: Build and push crossplane packages
+      run: ./crossplane xpkg build -f package -o configuration-magento2-gcp  && ./crossplane xpkg push -f configuration-magento2-gcp ${REGISTRY}/${{ github.repository }}/configuration-magento2-gcp:${{ env.VERSION }} || true' || true;
+

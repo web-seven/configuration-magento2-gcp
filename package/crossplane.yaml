@@ -1,0 +1,26 @@
+apiVersion: meta.pkg.crossplane.io/v1alpha1
+kind: Configuration
+metadata:
+  name: configuration-magento2-gcp
+spec:
+  dependsOn:
+    - provider: xpkg.upbound.io/upbound/provider-family-gcp
+      version: ">=v0.41.0"
+    - provider: xpkg.upbound.io/upbound/provider-gcp-cloudplatform
+      version: ">=v0.41.0"
+    - provider: xpkg.upbound.io/upbound/provider-gcp-compute
+      version: ">=v0.41.0"
+    - provider: xpkg.upbound.io/upbound/provider-gcp-container
+      version: ">=v0.41.0"
+    - provider: xpkg.upbound.io/upbound/provider-gcp-storage
+      version: ">=v0.41.0"
+    - provider: xpkg.upbound.io/crossplane-contrib/provider-helm
+      version: ">=v0.16.0"
+    - provider: xpkg.upbound.io/crossplane-contrib/provider-kubernetes
+      version: ">=v0.11.0"
+    - provider: xpkg.upbound.io/upbound/provider-gcp-sql
+      version: ">=v1.0.2"
+    - provider: xpkg.upbound.io/upbound/provider-gcp-servicenetworking
+      version: ">=v1.0.2"
+  crossplane:
+    version: ">=v1.14.1-0"

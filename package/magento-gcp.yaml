@@ -1,0 +1,774 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: magento2-gcp
+spec:
+  compositeTypeRef:
+    apiVersion: gcp.web7.md/v1alpha1
+    kind: Magento2GCP
+  resources:
+
+
+    - name: kubernetes-provider-local
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: ProviderConfig
+        spec:
+          credentials:
+            source: InjectedIdentity
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.uid"
+        transforms:
+          - type: string
+            string:
+              fmt: "magento-%s"
+        toFieldPath: "metadata.name"
+    
+
+    - name: database-secret
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                namespace: default
+              type: Opaque
+              stringData:
+                password: ""
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.uid"
+        transforms:
+          - type: string
+            string:
+              fmt: "magento-%s"
+        toFieldPath: "metadata.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.database.password"
+        toFieldPath: "spec.forProvider.manifest.stringData.password"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.uid"
+        transforms:
+          - type: string
+            string:
+              fmt: "magento-%s"
+        toFieldPath: "spec.providerConfigRef.name"
+
+
+    - name: provider-config-gcp
+      base:
+        apiVersion: gcp.upbound.io/v1beta1
+        kind: ProviderConfig
+        spec:
+          credentials:
+            secretRef:
+              key: creds
+              name: ""
+              namespace: default
+            source: Secret
+          projectID: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.providerConfigSecretRef.secret.name"
+        toFieldPath: "spec.credentials.secretRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.providerConfigSecretRef.secret.namespace"
+        toFieldPath: "spec.credentials.secretRef.namespace"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.projectID"
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: "metadata.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.name"
+        toFieldPath: "status.providers.gcp.name"
+
+
+    - name: ingress-ip
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Address
+        spec:
+          forProvider:
+            project: ""
+            region: ""
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-ingress-ip"
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.forProvider.project"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.location.region"
+        toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "status.atProvider.address"
+        toFieldPath: "status.ingress.ip"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "status.atProvider.id"
+        toFieldPath: "status.ingress.id"
+
+
+    - name: internal-ip-range
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: GlobalAddress
+        spec:
+          forProvider:
+            purpose: "VPC_PEERING"
+            networkRef:
+              name: ""
+            addressType: INTERNAL
+            prefixLength: 16
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.forProvider.project"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.network.name"
+        toFieldPath: "spec.forProvider.networkRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: "status.ipRange.name"
+
+
+    - name: service-private-connection
+      base:
+        apiVersion: servicenetworking.gcp.upbound.io/v1beta1
+        kind: Connection
+        spec:
+          forProvider:
+            networkRef:
+              name: ""
+            reservedPeeringRangesRefs:
+              - name: ""
+            service: servicenetworking.googleapis.com
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.network.name"
+        toFieldPath: "spec.forProvider.networkRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.ipRange.name"
+        toFieldPath: "spec.forProvider.reservedPeeringRangesRefs[0].name"
+
+
+    - name: egress-ip
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Address
+        spec:
+          forProvider:
+            project: ""
+            region: ""
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-egress-ip"
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.forProvider.project"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.location.region"
+        toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "status.atProvider.id"
+        toFieldPath: "status.egress.id"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "status.atProvider.id"
+        toFieldPath: "status.egress.ip"
+
+
+    - name: network
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Network
+        spec:
+          forProvider:
+            autoCreateSubnetworks: false
+            mtu: 1460
+            project: ""
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.forProvider.project"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "status.atProvider.id"
+        toFieldPath: "status.network.id"
+      - type: ToCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: "status.network.name"
+
+
+    - name: subnetwork
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Subnetwork
+        spec:
+          forProvider:
+            project: ""
+            region: ""
+            network: ""
+            ipCidrRange: 192.168.1.0/24
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.forProvider.project"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.location.region"
+        toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.network.id"
+        toFieldPath: "spec.forProvider.network"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "status.atProvider.id"
+        toFieldPath: "status.subnetwork.id"
+      - type: ToCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: "status.subnetwork.name"
+
+
+    - name: firewall
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Firewall
+        spec:
+          forProvider:
+            network: ""
+            allow:
+              - ports:
+                  - "80"
+                  - "443"
+                  - "8443"
+                  - "10254"
+                protocol: tcp
+            sourceRanges:
+              - 0.0.0.0/0
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.network.id"
+        toFieldPath: "spec.forProvider.network"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+
+
+    - name: router
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Router
+        spec:
+          forProvider:
+            project: ""
+            region: ""
+            network: ""
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.forProvider.project"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.location.region"
+        toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.network.id"
+        toFieldPath: "spec.forProvider.network"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "status.atProvider.id"
+        toFieldPath: "status.router.id"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.annotations['crossplane.io/external-name']"
+        toFieldPath: "status.router.name"
+
+
+    - name: router-nat
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: RouterNAT
+        spec:
+          forProvider:
+            project: ""
+            region: ""
+            router: ""
+            natIps: []
+            sourceSubnetworkIpRangesToNat: ALL_SUBNETWORKS_ALL_IP_RANGES
+            natIpAllocateOption: MANUAL_ONLY
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.projectId"
+        toFieldPath: "spec.forProvider.project"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.location.region"
+        toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.router.name"
+        toFieldPath: "spec.forProvider.router"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.egress.id"
+        toFieldPath: "spec.forProvider.natIps[0]"
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+
+
+    - name: cluster
+      base:
+        apiVersion: container.gcp.upbound.io/v1beta1
+        kind: Cluster
+        spec:
+          deletionPolicy: Delete
+          forProvider:
+            deletionProtection: false
+            project: ""
+            releaseChannel:
+              - channel: RAPID
+            privateClusterConfig:
+              - enablePrivateNodes: true
+                enablePrivateEndpoint: false
+                masterIpv4CidrBlock: 172.16.0.0/28
+            ipAllocationPolicy:
+              - {}
+            enableShieldedNodes: false
+            removeDefaultNodePool: true
+            initialNodeCount: 1
+            network: ""
+            subnetwork: ""
+            workloadIdentityConfig:
+              - {}
+          writeConnectionSecretToRef:
+            namespace: default
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
+        toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.projectId
+        toFieldPath: spec.forProvider.project
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.location.zone
+        toFieldPath: spec.forProvider.location
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.network.id"
+        toFieldPath: "spec.forProvider.network"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.subnetwork.id"
+        toFieldPath: "spec.forProvider.subnetwork"
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.projectId
+        toFieldPath: spec.forProvider.workloadIdentityConfig[0].workloadPool
+        transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "%s.svc.id.goog"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.uid"
+        toFieldPath: "spec.writeConnectionSecretToRef.name"
+        transforms:
+          - type: string
+            string:
+              fmt: "cluster-creds-%s"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "spec.writeConnectionSecretToRef.name"
+        toFieldPath: "status.cluster.creds.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "spec.writeConnectionSecretToRef.namespace"
+        toFieldPath: "status.cluster.creds.namespace"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
+        toFieldPath: "status.cluster.name"
+
+
+    - name: nodes
+      base:
+        apiVersion: container.gcp.upbound.io/v1beta1
+        kind: NodePool
+        metadata:
+          annotations:
+            crossplane.io/external-name: "essential-services"
+        spec:
+          forProvider:
+            project: ""
+            location: ""
+            cluster: ""
+            nodeCount:
+            nodeConfig:
+              - {}
+            autoscaling:
+              - maxNodeCount: 1
+                minNodeCount: 1
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.projectId
+        toFieldPath: spec.forProvider.project
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.location.zone
+        toFieldPath: spec.forProvider.location
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.cluster.name"
+        toFieldPath: spec.forProvider.cluster
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.nodeCount
+        toFieldPath: spec.forProvider.nodeCount
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.nodeType
+        toFieldPath: spec.forProvider.nodeConfig[0].machineType
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.gcp.name
+        toFieldPath: "spec.providerConfigRef.name"
+      
+
+    - name: kubernetes-provider
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: ProviderConfig
+        spec:
+          credentials:
+            source: Secret
+            secretRef:
+              name: ""
+              namespace: ""
+              key: kubeconfig
+          identity:
+            secretRef:
+              key: creds
+              name: ""
+              namespace: default
+            source: Secret
+            type: GoogleApplicationCredentials
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.name"
+        toFieldPath: "metadata.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.cluster.creds.name"
+        toFieldPath: "spec.credentials.secretRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.cluster.creds.namespace"
+        toFieldPath: "spec.credentials.secretRef.namespace"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.providerConfigSecretRef.secret.name"
+        toFieldPath: "spec.identity.secretRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.providerConfigSecretRef.secret.namespace"
+        toFieldPath: "spec.identity.secretRef.namespace"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.name"
+        toFieldPath: "status.providers.kubernetes.name"
+
+
+    - name: helm-provider
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: ProviderConfig
+        spec:
+          credentials:
+            secretRef:
+              name: ""
+              namespace: ""
+              key: kubeconfig
+            source: Secret
+          identity:
+            secretRef:
+              key: creds
+              name: ""
+              namespace: default
+            source: Secret
+            type: GoogleApplicationCredentials
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.name"
+        toFieldPath: "metadata.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.cluster.creds.name"
+        toFieldPath: "spec.credentials.secretRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.cluster.creds.namespace"
+        toFieldPath: "spec.credentials.secretRef.namespace"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.providerConfigSecretRef.secret.name"
+        toFieldPath: "spec.identity.secretRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.providerConfigSecretRef.secret.namespace"
+        toFieldPath: "spec.identity.secretRef.namespace"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.name"
+        toFieldPath: "status.providers.helm.name"
+
+
+    - name: ingress-nginx-release
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: Release
+        metadata:
+          annotations:
+            crossplane.io/external-name: "ingress-nginx"
+        spec:
+          forProvider:
+            chart:
+              name: ingress-nginx
+              repository: https://kubernetes.github.io/ingress-nginx
+              version: "4.8.0"
+            namespace: default
+            set:
+              - name: controller.service.loadBalancerIP
+                value: ""
+              - name: controller.autoscaling.enabled
+                value: "false"
+              - name: controller.allowSnippetAnnotations
+                value: "true"
+              - name: controller.publishService.enabled
+                value: "true"
+              - name: controller.resources.requests.cpu
+                value: "200m"
+              - name: controller.resources.requests.memory
+                value: "300Mi"
+              - name: controller.config.proxy-body-size
+                value: "150m"
+              - name: controller.config.proxy-buffer-size
+                value: "12k"
+              - name: controller.config.use-http2
+                value: "true"
+              - name: defaultBackend.enabled
+                value: "false"
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.ingress.ip
+        toFieldPath: spec.forProvider.set[0].value
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.helm.name
+        toFieldPath: spec.providerConfigRef.name
+
+
+    - name: magento-release
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: Release
+        metadata:
+          annotations:
+            crossplane.io/external-name: "magento"
+        spec:
+          forProvider:
+            chart:
+              name: "magento"
+              repository: "oci://registry-1.docker.io/bitnamicharts"
+              version: ""
+            namespace: default
+            values:
+              persistence: 
+                enabled: false
+              magentoHost: ""
+              magentoPassword: ""
+              magentoUsername: ""
+              magentoEmail: ""
+              externalDatabase:
+                host: ""
+                port: 3306
+                user: ""
+                password: ""
+                database: ""
+              mariadb:
+                enabled: false
+              image:
+                debug: true
+              ingress:
+                ingressClassName: nginx
+                enabled: true
+                hostname: ""
+                annotations:
+                  nginx.ingress.kubernetes.io/rewrite-target: /
+          providerConfigRef:
+            name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.providers.helm.name
+        toFieldPath: spec.providerConfigRef.name
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.database.password
+        toFieldPath: spec.forProvider.values.externalDatabase.password
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.magento.creds.password
+        toFieldPath: spec.forProvider.values.magentoPassword
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.magento.creds.username
+        toFieldPath: spec.forProvider.values.magentoUsername
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.magento.creds.email
+        toFieldPath: spec.forProvider.values.magentoEmail
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.sqlInstance.user.name
+        toFieldPath: spec.forProvider.values.externalDatabase.user
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.sqlInstance.database.name
+        toFieldPath: spec.forProvider.values.externalDatabase.database
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.sqlInstance.privateIpAddress
+        toFieldPath: spec.forProvider.values.externalDatabase.host
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.magento.hostname
+        toFieldPath: spec.forProvider.values.magentoHost
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.magento.hostname
+        toFieldPath: spec.forProvider.values.ingress.hostname
+
+
+    - name: db-instance-mysql
+      base:
+        apiVersion: sql.gcp.upbound.io/v1beta1
+        kind: DatabaseInstance
+        spec:
+          forProvider:
+            databaseVersion: MYSQL_5_7
+            deletionProtection: false
+            region: ""
+            settings:
+             - ipConfiguration:
+               - privateNetworkRef:
+                  name: ""
+            settings:
+              - diskSize: 20
+                tier: ""
+      patches:
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
+        toFieldPath: "status.sqlInstance.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.location.region"
+        toFieldPath: "spec.forProvider.region"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.database.version"
+        toFieldPath: "spec.forProvider.databaseVersion"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.database.diskSize"
+        toFieldPath: "spec.forProvider.settings[0].diskSize"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "spec.database.tier"
+        toFieldPath: "spec.forProvider.settings[0].tier"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.network.name"
+        toFieldPath: "spec.forProvider.settings[0].ipConfiguration[0].privateNetworkRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "status.atProvider.privateIpAddress"
+        toFieldPath: "status.sqlInstance.privateIpAddress"
+
+
+    - name: db-user-mysql
+      base:
+        apiVersion: sql.gcp.upbound.io/v1beta1
+        kind: User
+        spec:
+          forProvider:
+            instanceRef:
+              name: ""
+            passwordSecretRef:
+              key: password
+              name: ""
+              namespace: default
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.sqlInstance.name"
+        toFieldPath: "spec.forProvider.instanceRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
+        toFieldPath: "status.sqlInstance.user.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.uid"
+        transforms:
+          - type: string
+            string:
+              fmt: "magento-%s"
+        toFieldPath: "spec.forProvider.passwordSecretRef.name"
+
+
+    - name: db-mysql
+      base:
+        apiVersion: sql.gcp.upbound.io/v1beta1
+        kind: Database
+        spec:
+          forProvider:
+            instanceRef:
+              name: ""
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: "status.sqlInstance.name"
+        toFieldPath: "spec.forProvider.instanceRef.name"
+      - type: ToCompositeFieldPath
+        fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
+        toFieldPath: "status.sqlInstance.database.name"
+
+
