@@ -17,6 +17,13 @@ spec:
             spec:
               type: object
               properties:
+                providerConfigRef:
+                  type: object
+                  description: Reference to gcp provider configuration.
+                  properties:
+                    name:
+                      type: string
+                      description: Name of the gcp provider configuration.
                 projectId:
                   type: string
                   description: ID of the Google Cloud Platform project.
@@ -85,20 +92,6 @@ spec:
                         repository:
                           type: string
                           description: Repository for the chart.
-                providerConfigSecretRef:
-                  type: object
-                  description: Reference to provider configuration secret.
-                  properties:
-                    secret:
-                      type: object
-                      description: Reference to secret with GCP credentials.
-                      properties:
-                        name:
-                          type: string
-                          description: Name of the secret.
-                        namespace: 
-                          type: string
-                          description: Namespace of the secret.
             status:
               type: object
               description: Status information.
@@ -188,13 +181,6 @@ spec:
                         name:
                           type: string
                           description: Name of the Kubernetes provider.
-                    gcp:
-                      type: object
-                      description: Google Cloud Platform provider details.
-                      properties:
-                        name:
-                          type: string
-                          description: Name of the GCP provider.
                 sqlInstance:
                   type: object
                   description: SQL Instance details.

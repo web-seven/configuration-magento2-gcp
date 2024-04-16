@@ -8,7 +8,7 @@ spec:
     region: europe-west9
     zone: europe-west9-c
   nodeCount: 1
-  nodeType: n2-standard-2
+  nodeType: n2-standard-4
   database:
     password: "admin123"
     version: "MYSQL_5_7"
@@ -24,8 +24,5 @@ spec:
       username: "admin"
       password: "admin123"
       email: admin@gmail.com
-
-  providerConfigSecretRef:
-    secret:
-      name: gcp-secret
-      namespace: default
+  providerConfigRef:
+    name: ""

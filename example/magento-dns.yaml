@@ -1,0 +1,10 @@
+apiVersion: gcp.web7.md/v1alpha1
+kind: MagentoDNS
+metadata:
+  name: magento-dns
+spec:
+  projectId: ""
+  ingressIP: ""
+  hostname: ""
+  providerConfigRef:
+    name: ""

@@ -1,0 +1,67 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: magento-dns
+spec:
+  compositeTypeRef:
+    apiVersion: gcp.web7.md/v1alpha1
+    kind: MagentoDNS
+  resources:
+    - name: dns-zone
+      base:
+        apiVersion: dns.gcp.upbound.io/v1beta1
+        kind: ManagedZone
+        spec:
+          forProvider:
+            dnsName: ""
+            visibility: public
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.hostname
+        transforms:
+        - type: string
+          string: 
+            type: Format
+            fmt: "%s."
+        toFieldPath: spec.forProvider.dnsName
+      - type: FromCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: ToCompositeFieldPath
+        fromFieldPath: metadata.annotations['crossplane.io/external-name']
+        toFieldPath: "status.dnsZone.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.providerConfigRef.name
+        toFieldPath: "spec.providerConfigRef.name"
+
+
+    - name: dns-record-set
+      base:
+        apiVersion: dns.gcp.upbound.io/v1beta1
+        kind: RecordSet
+        spec:
+          forProvider:
+            managedZoneRef:
+              name: ""
+            name: ""
+            rrdatas: []
+            ttl: 300
+            type: A
+      patches:
+      - type: FromCompositeFieldPath
+        fromFieldPath: status.dnsZone.name
+        toFieldPath: "spec.forProvider.managedZoneRef.name"
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.hostname
+        transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "%s."
+        toFieldPath: spec.forProvider.name
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.ingressIP
+        toFieldPath: spec.forProvider.rrdatas[0]
+      - type: FromCompositeFieldPath
+        fromFieldPath: spec.providerConfigRef.name
+        toFieldPath: "spec.providerConfigRef.name"
