@@ -22,6 +22,7 @@ spec:
         transforms:
           - type: string
             string:
+              type: Format
               fmt: "magento-%s"
         toFieldPath: "metadata.name"
     
@@ -48,6 +49,7 @@ spec:
         transforms:
           - type: string
             string:
+              type: Format
               fmt: "magento-%s"
         toFieldPath: "metadata.name"
       - type: FromCompositeFieldPath
@@ -58,38 +60,9 @@ spec:
         transforms:
           - type: string
             string:
+              type: Format
               fmt: "magento-%s"
         toFieldPath: "spec.providerConfigRef.name"
-
-
-    - name: provider-config-gcp
-      base:
-        apiVersion: gcp.upbound.io/v1beta1
-        kind: ProviderConfig
-        spec:
-          credentials:
-            secretRef:
-              key: creds
-              name: ""
-              namespace: default
-            source: Secret
-          projectID: ""
-      patches:
-      - type: FromCompositeFieldPath
-        fromFieldPath: "spec.providerConfigSecretRef.secret.name"
-        toFieldPath: "spec.credentials.secretRef.name"
-      - type: FromCompositeFieldPath
-        fromFieldPath: "spec.providerConfigSecretRef.secret.namespace"
-        toFieldPath: "spec.credentials.secretRef.namespace"
-      - type: FromCompositeFieldPath
-        fromFieldPath: "spec.projectId"
-        toFieldPath: "spec.projectID"
-      - type: FromCompositeFieldPath
-        fromFieldPath: metadata.annotations['crossplane.io/external-name']
-        toFieldPath: "metadata.name"
-      - type: ToCompositeFieldPath
-        fromFieldPath: "metadata.name"
-        toFieldPath: "status.providers.gcp.name"
 
 
     - name: ingress-ip
@@ -102,14 +75,26 @@ spec:
             region: ""
           providerConfigRef:
             name: ""
+          writeConnectionSecretToRef:
+            namespace: default
+            name: ""
       patches:
       - type: FromCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
         transforms:
           - type: string
             string:
+              type: Format
               fmt: "%s-ingress-ip"
         toFieldPath: metadata.annotations['crossplane.io/external-name']
+      - type: FromCompositeFieldPath
+        fromFieldPath: "metadata.uid"
+        toFieldPath: "spec.writeConnectionSecretToRef.name"
+        transforms:
+          - type: string
+            string:
+              type: Format
+              fmt: "ingress-%s"
       - type: FromCompositeFieldPath
         fromFieldPath: "spec.projectId"
         toFieldPath: "spec.forProvider.project"
@@ -117,7 +102,7 @@ spec:
         fromFieldPath: "spec.location.region"
         toFieldPath: "spec.forProvider.region"
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.address"
@@ -151,7 +136,7 @@ spec:
         fromFieldPath: "status.network.name"
         toFieldPath: "spec.forProvider.networkRef.name"
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: metadata.annotations['crossplane.io/external-name']
@@ -197,6 +182,7 @@ spec:
         transforms:
           - type: string
             string:
+              type: Format
               fmt: "%s-egress-ip"
         toFieldPath: metadata.annotations['crossplane.io/external-name']
       - type: FromCompositeFieldPath
@@ -206,7 +192,7 @@ spec:
         fromFieldPath: "spec.location.region"
         toFieldPath: "spec.forProvider.region"
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.id"
@@ -235,7 +221,7 @@ spec:
         fromFieldPath: "spec.projectId"
         toFieldPath: "spec.forProvider.project"
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.id"
@@ -271,7 +257,7 @@ spec:
         fromFieldPath: "status.network.id"
         toFieldPath: "spec.forProvider.network"
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.id"
@@ -307,7 +293,7 @@ spec:
         fromFieldPath: "status.network.id"
         toFieldPath: "spec.forProvider.network"
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
 
 
@@ -336,7 +322,7 @@ spec:
         fromFieldPath: "status.network.id"
         toFieldPath: "spec.forProvider.network"
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
       - type: ToCompositeFieldPath
         fromFieldPath: "status.atProvider.id"
@@ -377,7 +363,7 @@ spec:
         fromFieldPath: "status.egress.id"
         toFieldPath: "spec.forProvider.natIps[0]"
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
 
 
@@ -438,6 +424,7 @@ spec:
         transforms:
           - type: string
             string:
+              type: Format
               fmt: "cluster-creds-%s"
       - type: ToCompositeFieldPath
         fromFieldPath: "spec.writeConnectionSecretToRef.name"
@@ -487,7 +474,7 @@ spec:
         fromFieldPath: spec.nodeType
         toFieldPath: spec.forProvider.nodeConfig[0].machineType
       - type: FromCompositeFieldPath
-        fromFieldPath: status.providers.gcp.name
+        fromFieldPath: spec.providerConfigRef.name
         toFieldPath: "spec.providerConfigRef.name"
       
 
@@ -697,8 +684,8 @@ spec:
             deletionProtection: false
             region: ""
             settings:
-             - ipConfiguration:
-               - privateNetworkRef:
+              - ipConfiguration:
+                - privateNetworkRef:
                   name: ""
             settings:
               - diskSize: 20
@@ -751,6 +738,7 @@ spec:
         transforms:
           - type: string
             string:
+              type: Format
               fmt: "magento-%s"
         toFieldPath: "spec.forProvider.passwordSecretRef.name"
 

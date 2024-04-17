@@ -1,0 +1,48 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: magentodns.gcp.web7.md
+spec:
+  group: gcp.web7.md
+  names:
+    kind: MagentoDNS
+    plural: magentodns
+    singular: magentodns
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                providerConfigRef:
+                  type: object
+                  description: Reference to gcp provider configuration.
+                  properties:
+                    name:
+                      type: string
+                      description: Name of the gcp provider configuration.
+                projectId:
+                  type: string
+                  description: ID of the Google Cloud Platform project.
+                ingressIP:
+                  type: string
+                  description: Ingress IP.
+                hostname:
+                  type: string
+                  description: Hostname for Magento.
+            status:
+              type: object
+              description: Status information.
+              properties:
+                dnsZone:
+                  type: object
+                  description: DNS Zone details.
+                  properties:
+                    name:
+                      type: string
+                      description: DNS Zone name.
+      served: true
+      referenceable: true
